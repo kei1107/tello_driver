@@ -156,8 +156,8 @@ class GamepadMarshallNode:
             'palm_land', Empty,  queue_size=1, latch=False)
         self.pub_reset = rospy.Publisher(
             'reset', Empty,  queue_size=1, latch=False)
-        self.pub_flattrim = rospy.Publisher(
-            'flattrim', Empty,  queue_size=1, latch=False)
+        # self.pub_flattrim = rospy.Publisher(
+        #     'flattrim', Empty,  queue_size=1, latch=False)
         self.pub_flip = rospy.Publisher(
             'flip', UInt8,  queue_size=1, latch=False)
         self.pub_cmd_out = rospy.Publisher(
@@ -207,9 +207,9 @@ class GamepadMarshallNode:
             self.pub_palm_land.publish()
             #rospy.logwarn('Issued PALM_LAND')
 
-        if not self.joy_state_prev.X and self.joy_state.X:
-            self.pub_flattrim.publish()
-            #rospy.logwarn('Issued FLATTRIM')
+        # if not self.joy_state_prev.X and self.joy_state.X:
+        #     self.pub_flattrim.publish()
+        #     #rospy.logwarn('Issued FLATTRIM')
 
         if not self.joy_state_prev.Y and self.joy_state.Y:
             self.pub_flip.publish(self.flip_dir)
