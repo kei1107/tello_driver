@@ -31,6 +31,31 @@ class GamepadState:
         self.LT = 0.  # 1.0: idle, -1.0: depressed
         self.RT = 0.  # 1.0: idle, -1.0: depressed
 
+    def parse_ps4_usb(self, msg):
+        if len(msg.buttons) != 13 or len(msg.axes) != 8:
+            raise ValueError('Invalid number of buttons (%d) or axes (%d)' % (
+                len(msg.buttons), len(msg.axes)))
+        self.A = msg.buttons[0]
+        self.B = msg.buttons[1]
+        self.Y = msg.buttons[2]
+        self.X = msg.buttons[3]
+        self.L1 = msg.buttons[4]
+        self.R1 = msg.buttons[5]
+        self.L2 = msg.buttons[6]
+        self.R2 = msg.buttons[7]
+        self.Select = msg.buttons[8]
+        self.Start = msg.buttons[9]
+        self.Sync = msg.buttons[10]
+        self.L3 = msg.buttons[11]
+        self.R3 = msg.buttons[12]
+
+        self.LX = msg.axes[0]
+        self.LY = msg.axes[1]
+        self.LT = msg.axes[2]
+        self.RX = msg.axes[3]
+        self.RY = msg.axes[4]
+        self.RT = msg.axes[5]
+
     def parse_ps3_usb(self, msg):
         if len(msg.buttons) != 17 or len(msg.axes) != 6:
             raise ValueError('Invalid number of buttons (%d) or axes (%d)' % (
@@ -89,6 +114,10 @@ class GamepadState:
 
     def parse(self, msg):
         err = None
+        try:
+            return self.parse_ps4_usb(msg)
+        except ValueError, e:
+            err = e
         try:
             return self.parse_ps3_usb(msg)
         except ValueError, e:
