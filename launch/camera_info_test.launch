@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="namespace" default="tello" />
+    <arg name="tello_name" default="FD41FA" />
+
+    <group ns="$(arg namespace)">
+        <param name="calib_fname" value="$(find tello_driver)/calib_data/$(arg tello_name).yaml"/>
+        <node pkg="tello_driver" name="camera_info_publisher" type="yaml_to_camera_info_publisher.py" output="screen"/>
+    </group>
+</launch>

@@ -51,7 +51,7 @@ To see the camera:
 
 First check out the following and possibly adjust parameters / code / mappings:
 * [launch/joy_teleop.launch](launch/joy_teleop.launch)
-* [launch/logger.launch](launch/logger.launch)
+* [launch/logger.launch](launch/tmp/logger.launch)
 * [src/gamepad_marshall_node.py](src/gamepad_marshall_node.py)
 
 Now run:

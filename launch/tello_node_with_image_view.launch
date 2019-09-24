@@ -9,21 +9,23 @@
         <arg name="tello_ip" default="192.168.10.1"/>
         <arg name="tello_port" default="8889"/>
         <arg name="client_port" default="8890"/>
-        <arg name="vid_port" default="6038"/>
-        <arg name="conn_port" default="9617"/>
+        <arg name="server_port" default="6038"/>
         <arg name="tello_name" default="FD41FA"/>
 
         <node pkg="tello_driver" name="tello" type="tello_driver_node.py" output="screen">
             <param name="tello_ip" value="$(arg tello_ip)"/>
             <param name="tello__port" value="$(arg tello_port)"/>
             <param name="client_port" value="$(arg client_port)"/>
-            <param name="vid_port" value="$(arg vid_port)"/>
-            <param name="conn_port" value="$(arg conn_port)"/>
+            <param name="server_port" value="$(arg server_port)"/>
             <param name="connect_timeout_sec" value="10.0"/>
             <param name="tello_frame" value="$(arg namespace)"/>
         </node>
 
         <param name="calib_fname" value="$(find tello_driver)/calib_data/$(arg tello_name).yaml"/>
         <node pkg="tello_driver" name="camera_info_publisher" type="yaml_to_camera_info_publisher.py" output="screen"/>
+
+        <node name="image_view" pkg="image_view" type="image_view" respawn="false" output="screen">
+            <remap from="image" to="/$(arg namespace)/image_raw"/>
+        </node>
     </group>
 </launch>

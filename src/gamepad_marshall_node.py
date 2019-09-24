@@ -147,23 +147,21 @@ class GamepadMarshallNode:
             '~agent_mode_timeout_sec', 1.0)
 
         self.pub_takeoff = rospy.Publisher(
-            'takeoff', Empty,  queue_size=1, latch=False)
+            'takeoff', Empty, queue_size=1, latch=False)
         self.pub_throw_takeoff = rospy.Publisher(
-            'throw_takeoff', Empty,  queue_size=1, latch=False)
+            'throw_takeoff', Empty, queue_size=1, latch=False)
         self.pub_land = rospy.Publisher(
-            'land', Empty,  queue_size=1, latch=False)
+            'land', Empty, queue_size=1, latch=False)
         self.pub_palm_land = rospy.Publisher(
-            'palm_land', Empty,  queue_size=1, latch=False)
+            'palm_land', Empty, queue_size=1, latch=False)
         self.pub_reset = rospy.Publisher(
-            'reset', Empty,  queue_size=1, latch=False)
+            'reset', Empty, queue_size=1, latch=False)
         # self.pub_flattrim = rospy.Publisher(
         #     'flattrim', Empty,  queue_size=1, latch=False)
         self.pub_flip = rospy.Publisher(
-            'flip', UInt8,  queue_size=1, latch=False)
+            'flip', UInt8, queue_size=1, latch=False)
         self.pub_cmd_out = rospy.Publisher(
             'cmd_vel', Twist, queue_size=10, latch=False)
-        self.pub_fast_mode = rospy.Publisher(
-            'fast_mode', Bool,  queue_size=1, latch=False)
         self.sub_agent_cmd_in = rospy.Subscriber(
             'agent_cmd_vel_in', Twist, self.agent_cmd_cb)
         self.sub_joy = rospy.Subscriber('/joy', Joy, self.joy_cb)
@@ -184,28 +182,28 @@ class GamepadMarshallNode:
         # Process emergency stop
         if not self.joy_state_prev.B and self.joy_state.B:
             self.pub_reset.publish()
-            #rospy.logwarn('Issued RESET')
+            # rospy.logwarn('Issued RESET')
             return
 
         # Process takeoff
         if not self.joy_state_prev.Start and self.joy_state.Start:
             self.pub_takeoff.publish()
-            #rospy.logwarn('Issued TAKEOFF')
+            # rospy.logwarn('Issued TAKEOFF')
 
         # Process throw takeoff
         if not self.joy_state_prev.DU and self.joy_state.DU:
             self.pub_throw_takeoff.publish()
-            #rospy.logwarn('Issued THROW_TAKEOFF')
+            # rospy.logwarn('Issued THROW_TAKEOFF')
 
         # Process land
         if not self.joy_state_prev.Select and self.joy_state.Select:
             self.pub_land.publish()
-            #rospy.logwarn('Issued LAND')
+            # rospy.logwarn('Issued LAND')
 
         # Process palm land
         if not self.joy_state_prev.DD and self.joy_state.DD:
             self.pub_palm_land.publish()
-            #rospy.logwarn('Issued PALM_LAND')
+            # rospy.logwarn('Issued PALM_LAND')
 
         # if not self.joy_state_prev.X and self.joy_state.X:
         #     self.pub_flattrim.publish()
@@ -213,7 +211,7 @@ class GamepadMarshallNode:
 
         if not self.joy_state_prev.Y and self.joy_state.Y:
             self.pub_flip.publish(self.flip_dir)
-            #rospy.logwarn('Issued FLIP %d' % self.flip_dir)
+            # rospy.logwarn('Issued FLIP %d' % self.flip_dir)
             self.flip_dir += 1
             if self.flip_dir > self.MAX_FLIP_DIR:
                 self.flip_dir = 0
@@ -226,11 +224,7 @@ class GamepadMarshallNode:
 
         # Manual control mode
         if self.agent_mode_t is None:
-            if not self.joy_state_prev.R2 and self.joy_state.R2:
-                self.pub_fast_mode.publish(True)
-            elif self.joy_state_prev.R2 and not self.joy_state.R2:
-                self.pub_fast_mode.publish(False)
-
+            # TODO:check
             cmd = Twist()
             cmd.linear.x = self.joy_state.LY
             cmd.linear.y = self.joy_state.LX
