@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<launch>
+    <arg name="joy_dev" default="/dev/input/js0"/>
+    <arg name="namespace1" default="tello1"/>
+    <arg name="namespace2" default="tello2"/>
+
+    <node pkg="joy" type="joy_node" name="joy_node">
+        <param name="dev" value="$(arg joy_dev)"/>
+        <param name="deadzone" value="0.2"/>
+    </node>
+
+    <group ns="$(arg namespace1)">
+        <node pkg="tello_driver" type="gamepad_marshall_node.py" name="joy_teleop"/>
+    </group>
+    <group ns="$(arg namespace2)">
+        <node pkg="tello_driver" type="gamepad_marshall_node.py" name="joy_teleop"/>
+    </group>
+
+</launch>
