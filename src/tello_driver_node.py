@@ -6,7 +6,7 @@ from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from dynamic_reconfigure.server import Server
-from h264_image_transport.msg import H264Packet
+# from h264_image_transport.msg import H264Packet
 from tello_driver.msg import TelloStatus
 from tello_driver.cfg import TelloConfig
 from cv_bridge import CvBridge, CvBridgeError
