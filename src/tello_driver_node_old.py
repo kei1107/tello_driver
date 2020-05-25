@@ -2,10 +2,11 @@
 import rospy
 from std_msgs.msg import Empty, UInt8, Bool
 from std_msgs.msg import UInt8MultiArray
-from sensor_msgs.msg import Image, CompressedImage, Imu
+from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from dynamic_reconfigure.server import Server
+# from h264_image_transport.msg import H264Packet
 from tello_driver.msg import TelloStatus
 from tello_driver.cfg import TelloConfig
 from cv_bridge import CvBridge, CvBridgeError
@@ -83,6 +84,7 @@ class TelloNode(tello.Tello):
             tello_port=self.tello_port,
             log=log)
 
+
         rospy.loginfo('Connecting to drone @ %s:%d' % self.tello_addr)
         self.connect()
         try:
@@ -115,46 +117,34 @@ class TelloNode(tello.Tello):
         #         'image_raw', Image, queue_size=10)
 
         self.sub_takeoff = rospy.Subscriber('takeoff', Empty, self.cb_takeoff)
-        self.sub_throw_takeoff = rospy.Subscriber('throw_takeoff', Empty, self.cb_throw_takeoff)
+        self.sub_throw_takeoff = rospy.Subscriber(
+            'throw_takeoff', Empty, self.cb_throw_takeoff)
         self.sub_land = rospy.Subscriber('land', Empty, self.cb_land)
-        self.sub_palm_land = rospy.Subscriber('palm_land', Empty, self.cb_palm_land)
+        self.sub_palm_land = rospy.Subscriber(
+            'palm_land', Empty, self.cb_palm_land)
         self.sub_flip = rospy.Subscriber('flip', UInt8, self.cb_flip)
         self.sub_cmd_vel = rospy.Subscriber('cmd_vel', Twist, self.cb_cmd_vel)
 
-        self.subscribe(self.EVENT_FLIGHT_DATA, self.cb_status_log)
+        self.subscribe(self.EVENT_FLIGHT_DATA, self.cb_status_telem)
 
         self.frame_thread = threading.Thread(target=self.framegrabber_loop)
         self.frame_thread.start()
 
-        # EVENT_LOG_DATA from 'TelloPy' package
-        self.pub_odom = rospy.Publisher('odom', Odometry, queue_size=1, latch=True)
-        self.pub_imu = rospy.Publisher('imu', Imu, queue_size=1, latch=True)
-        self.subscribe(self.EVENT_LOG_DATA, self.cb_data_log)
-        self.sub_zoom = rospy.Subscriber('video_mode', Empty, self.cb_video_mode, queue_size=1)
+        # if self.stream_h264_video:
+        #     self.start_video()
+        #     self.subscribe(self.EVENT_VIDEO_FRAME, self.cb_h264_frame)
+        # else:
+        #     self.frame_thread = threading.Thread(target=self.framegrabber_loop)
+        #     self.frame_thread.start()
 
         rospy.loginfo('Tello driver node ready')
 
-    def cb_video_mode(self, msg):
-        if not self.zoom:
-            self.set_video_mode(True)
-        else:
-            self.set_video_mode(False)
+    def cb_shutdown(self):
+        self.quit()
+        if self.frame_thread is not None:
+            self.frame_thread.join()
 
-    def cb_dyncfg(self, config, level):
-        update_all = False
-        req_sps_pps = False
-        if self.cfg is None:
-            self.cfg = config
-            update_all = True
-
-        if update_all or self.cfg.fixed_video_rate != config.fixed_video_rate:
-            self.set_video_encoder_rate(config.fixed_video_rate)
-            req_sps_pps = True
-
-        self.cfg = config
-        return self.cfg
-
-    def cb_status_log(self, event, sender, data, **args):
+    def cb_status_telem(self, event, sender, data, **args):
         speed_horizontal_mps = math.sqrt(data.north_speed * data.north_speed + data.east_speed * data.east_speed) / 10.0
 
         # TODO: verify outdoors: anecdotally, observed that:
@@ -202,64 +192,24 @@ class TelloNode(tello.Tello):
         )
         self.pub_status.publish(msg)
 
-    def cb_data_log(self, event, sender, data, **args):
-        time_cb = rospy.Time.now()
+    def cb_odom_log(self, event, sender, data, **args):
+        odom_msg = UInt8MultiArray()
+        odom_msg.data = str(data)
+        # self.pub_odom.publish(odom_msg)
 
-        odom_msg = Odometry()
-        odom_msg.child_frame_id = rospy.get_namespace() + '_base_link'
-        odom_msg.header.stamp = time_cb
-        odom_msg.header.frame_id = rospy.get_namespace() + '_local_origin'
-
-        # Height from MVO received as negative distance to floor
-        odom_msg.pose.pose.position.z = -data.mvo.pos_z  # self.height #-data.mvo.pos_z
-        odom_msg.pose.pose.position.x = data.mvo.pos_x
-        odom_msg.pose.pose.position.y = data.mvo.pos_y
-        odom_msg.pose.pose.orientation.w = data.imu.q0
-        odom_msg.pose.pose.orientation.x = data.imu.q1
-        odom_msg.pose.pose.orientation.y = data.imu.q2
-        odom_msg.pose.pose.orientation.z = data.imu.q3
-        # Linear speeds from MVO received in dm/sec
-        odom_msg.twist.twist.linear.x = data.mvo.vel_y / 10
-        odom_msg.twist.twist.linear.y = data.mvo.vel_x / 10
-        odom_msg.twist.twist.linear.z = -data.mvo.vel_z / 10
-        odom_msg.twist.twist.angular.x = data.imu.gyro_x
-        odom_msg.twist.twist.angular.y = data.imu.gyro_y
-        odom_msg.twist.twist.angular.z = data.imu.gyro_z
-
-        self.pub_odom.publish(odom_msg)
-
-        imu_msg = Imu()
-        imu_msg.header.stamp = time_cb
-        imu_msg.header.frame_id = rospy.get_namespace() + '_base_link'
-
-        imu_msg.orientation.w = data.imu.q0
-        imu_msg.orientation.x = data.imu.q1
-        imu_msg.orientation.y = data.imu.q2
-        imu_msg.orientation.z = data.imu.q3
-        imu_msg.angular_velocity.x = data.imu.gyro_x
-        imu_msg.angular_velocity.y = data.imu.gyro_y
-        imu_msg.angular_velocity.z = data.imu.gyro_z
-        imu_msg.linear_acceleration.x = data.imu.acc_x
-        imu_msg.linear_acceleration.y = data.imu.acc_y
-        imu_msg.linear_acceleration.z = data.imu.acc_z
-
-        self.pub_imu.publish(imu_msg)
-
-    def cb_cmd_vel(self, msg):
-        self.set_pitch(msg.linear.x)
-        self.set_roll(-msg.linear.y)
-        self.set_yaw(-msg.angular.z)
-        self.set_throttle(msg.linear.z)
-
-    def cb_shutdown(self):
-        self.quit()
-        if self.frame_thread is not None:
-            self.frame_thread.join()
+    # def cb_h264_frame(self, event, sender, data, **args):
+    #     frame, seq_id, frame_secs = data
+    #     pkt_msg = H264Packet()
+    #     pkt_msg.header.seq = seq_id
+    #     pkt_msg.header.frame_id = rospy.get_namespace()
+    #     pkt_msg.header.stamp = rospy.Time.from_sec(frame_secs)
+    #     pkt_msg.data = frame
+    #     self.pub_image_h264.publish(pkt_msg)
 
     def framegrabber_loop(self):
+
         # delay start
         rospy.sleep(2.0)
-
         try:
             container = None
             while self.state != self.STATE_QUIT:
@@ -290,6 +240,20 @@ class TelloNode(tello.Tello):
                 break
         except BaseException as err:
             rospy.logerr('fgrab: pyav decoder failed - %s' % str(err))
+
+    def cb_dyncfg(self, config, level):
+        update_all = False
+        req_sps_pps = False
+        if self.cfg is None:
+            self.cfg = config
+            update_all = True
+
+        if update_all or self.cfg.fixed_video_rate != config.fixed_video_rate:
+            self.set_video_encoder_rate(config.fixed_video_rate)
+            req_sps_pps = True
+
+        self.cfg = config
+        return self.cfg
 
     def cb_takeoff(self, msg):
         success = self.takeoff()
@@ -335,6 +299,12 @@ class TelloNode(tello.Tello):
             success = self.flip_forwardright()
 
         notify_cmd_success('Flip %d' % msg.data, success)
+
+    def cb_cmd_vel(self, msg):
+        self.set_pitch(msg.linear.x)
+        self.set_roll(-msg.linear.y)
+        self.set_yaw(-msg.angular.z)
+        self.set_throttle(msg.linear.z)
 
 
 def main():
