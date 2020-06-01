@@ -14,7 +14,7 @@ import av
 import math
 import numpy as np
 import threading
-import time
+
 from tellopy._internal import tello
 from tellopy._internal import error
 from tellopy._internal import protocol
