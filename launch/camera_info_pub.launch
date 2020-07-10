@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="tello_driver" name="camera_info_publisher" type="yaml_to_camera_info_publisher.py" output="screen">
+      <param name="calib_fname" value="$(find tello_driver)/calib_data/camera12.yaml"/>
+      <param name="frame_id" value="camera12_color_optical_frame"/>
+
+       <remap from="~camera_info" to="/camera12/color/camera_info" />
+    </node>
+</launch>

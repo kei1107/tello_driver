@@ -54,16 +54,19 @@ def yaml_to_CameraInfo(yaml_fname):
 def main():
     # Initialize publisher node
     rospy.init_node("camera_info_publisher", anonymous=True)
-    publisher = rospy.Publisher("camera_info", CameraInfo, queue_size=10)
+    publisher = rospy.Publisher("~camera_info", CameraInfo, queue_size=10)
     rate = rospy.Rate(10)
 
     filename = rospy.get_param('~calib_fname', '#####')
+    frame_id = rospy.get_param('~frame_id', '')
 
     # Parse yaml file
     camera_info_msg = yaml_to_CameraInfo(filename)
+    camera_info_msg.header.frame_id = frame_id;
 
     # Run publisher
     while not rospy.is_shutdown():
+        camera_info_msg.header.stamp = rospy.Time.now();
         publisher.publish(camera_info_msg)
         rate.sleep()
 
