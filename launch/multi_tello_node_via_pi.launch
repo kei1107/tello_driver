@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="namespace1" default="tello1"/>
+    <arg name="namespace2" default="tello2"/>
+
+    <group ns="$(arg namespace1)">
+        <node pkg="tf" type="static_transform_publisher" name="map_to_$(arg namespace1)" output="screen"
+              args="0 0 0 0 0 0 map $(arg namespace1)/ 10"/>
+
+        <arg name="tello_ip"    default="192.168.90.134"/>
+        <arg name="tello_port"  default="12001"/>
+        <arg name="client_port" default="13001"/>
+        <arg name="vid_port"    default="14001"/>
+        <arg name="conn_port"   default="9617"/>
+        <arg name="tello_name"  default="FD41FA"/>
+
+        <node pkg="tello_driver" name="tello" type="tello_driver_node.py" output="screen">
+            <param name="tello_ip" value="$(arg tello_ip)"/>
+            <param name="tello_port" value="$(arg tello_port)"/>
+            <param name="client_port" value="$(arg client_port)"/>
+            <param name="vid_port" value="$(arg vid_port)"/>
+            <param name="conn_port" value="$(arg conn_port)"/>
+            <param name="connect_timeout_sec" value="10.0"/>
+            <param name="tello_frame" value="$(arg namespace1)"/>
+        </node>
+        <node pkg="tello_driver" name="camera_info_publisher" type="yaml_to_camera_info_publisher.py" output="screen">
+            <param name="calib_fname" value="$(find tello_driver)/calib_data/$(arg tello_name).yaml"/>
+        </node>
+    </group>
+
+    <group ns="$(arg namespace2)">
+        <node pkg="tf" type="static_transform_publisher" name="map_to_$(arg namespace2)" output="screen"
+              args="0 0 0 0 0 0 map $(arg namespace2)/ 10"/>
+
+        <arg name="tello_ip"    default="192.168.90.100"/>
+        <arg name="tello_port"  default="12001"/>
+        <arg name="client_port" default="13002"/>
+        <arg name="vid_port"    default="14002"/>
+        <arg name="conn_port"   default="9617"/>
+        <arg name="tello_name"  default="FD41FA"/>
+
+        <node pkg="tello_driver" name="tello" type="tello_driver_node.py" output="screen">
+            <param name="tello_ip" value="$(arg tello_ip)"/>
+            <param name="tello_port" value="$(arg tello_port)"/>
+            <param name="client_port" value="$(arg client_port)"/>
+            <param name="vid_port" value="$(arg vid_port)"/>
+            <param name="conn_port" value="$(arg conn_port)"/>
+            <param name="connect_timeout_sec" value="10.0"/>
+            <param name="tello_frame" value="$(arg namespace2)"/>
+        </node>
+        <node pkg="tello_driver" name="camera_info_publisher" type="yaml_to_camera_info_publisher.py" output="screen">
+            <param name="calib_fname" value="$(find tello_driver)/calib_data/$(arg tello_name).yaml"/>
+        </node>
+
+      </group>
+</launch>

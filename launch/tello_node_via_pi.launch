@@ -6,12 +6,12 @@
         <node pkg="tf" type="static_transform_publisher" name="map_to_$(arg namespace)" output="screen"
               args="0 0 0 0 0 0 map $(arg namespace)/ 10"/>
 
-        <arg name="tello_ip" default="192.168.10.1"/>
-        <arg name="tello_port" default="8889"/>
-        <arg name="client_port" default="8890"/>
-        <arg name="vid_port" default="6038"/>
-        <arg name="conn_port" default="9617"/>
-        <arg name="tello_name" default="FD41FA"/>
+        <arg name="tello_ip"    default="192.168.90.134"/>
+        <arg name="tello_port"  default="12001"/>
+        <arg name="client_port" default="13001"/>
+        <arg name="vid_port"    default="14001"/>
+        <arg name="conn_port"   default="9617"/>
+        <arg name="tello_name"  default="FD41FA"/>
 
         <node pkg="tello_driver" name="tello" type="tello_driver_node.py" output="screen">
             <param name="tello_ip" value="$(arg tello_ip)"/>

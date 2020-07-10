@@ -82,7 +82,6 @@ class TelloNode(tello.Tello):
             tello_ip=self.tello_ip,
             tello_port=self.tello_port,
             log=log)
-
         rospy.loginfo('Connecting to drone @ %s:%d' % self.tello_addr)
         self.connect()
         try:

@@ -14,7 +14,7 @@
 
         <node pkg="tello_driver" name="tello" type="tello_driver_node.py" output="screen">
             <param name="tello_ip" value="$(arg tello_ip)"/>
-            <param name="tello__port" value="$(arg tello_port)"/>
+            <param name="tello_port" value="$(arg tello_port)"/>
             <param name="client_port" value="$(arg client_port)"/>
             <param name="server_port" value="$(arg server_port)"/>
             <param name="connect_timeout_sec" value="10.0"/>
